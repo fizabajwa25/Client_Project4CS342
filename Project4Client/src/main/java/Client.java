@@ -5,53 +5,56 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.function.Consumer;
 
-
-
-public class Client extends Thread{
-
-	
-	Socket socketClient;
-	
-	ObjectOutputStream out;
-	ObjectInputStream in;
-	
+public class Client extends Thread {
+	private Socket socketClient;
+	private ObjectOutputStream out;
+	private ObjectInputStream in;
 	private Consumer<Serializable> callback;
-	
-	Client(Consumer<Serializable> call){
-	
-		callback = call;
+
+	public Client(Consumer<Serializable> callback) {
+		this.callback = callback;
 	}
-	
+
+	@Override
 	public void run() {
-		
 		try {
-		socketClient= new Socket("127.0.0.1",5555);
-	    out = new ObjectOutputStream(socketClient.getOutputStream());
-	    in = new ObjectInputStream(socketClient.getInputStream());
-	    socketClient.setTcpNoDelay(true);
-		}
-		catch(Exception e) {}
-		
-		while(true) {
-			 
-			try {
-			String message = in.readObject().toString();
-			callback.accept(message);
+			// Connect to the server
+			socketClient = new Socket("127.0.0.1", 5555);
+			out = new ObjectOutputStream(socketClient.getOutputStream());
+			in = new ObjectInputStream(socketClient.getInputStream());
+			socketClient.setTcpNoDelay(true);
+
+			// Continuously listen for messages from the server
+			while (true) {
+				Serializable message = (Serializable) in.readObject();
+				callback.accept(message);
 			}
-			catch(Exception e) {}
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			// Close the socket and streams when finished
+			try {
+				if (socketClient != null) {
+					socketClient.close();
+				}
+				if (out != null) {
+					out.close();
+				}
+				if (in != null) {
+					in.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-	
-    }
-	
-	public void send(String data) {
-		
+	}
+
+	// Method to send a message to the server
+	public void send(Serializable data) {
 		try {
 			out.writeObject(data);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-
-
 }
