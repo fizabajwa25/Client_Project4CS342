@@ -18,6 +18,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -37,9 +38,11 @@ public class GuiClient extends Application {
 	private GridPane gridPane;
 	private Ship selectedShip;
 	Stage primaryStage;
+	Message message;
 
 	private final int GRID_SIZE = 10;
 	private Rectangle[][] gridRectangles;
+	int[][] boardState = new int[GRID_SIZE][GRID_SIZE];
 
 
 	public static void main(String[] args) {
@@ -52,6 +55,14 @@ public class GuiClient extends Application {
 		clientConnection = new Client(data -> {
 			Platform.runLater(() -> {
 				listItems2.getItems().add(data.toString());
+				message = (Message) data;
+				if (message.getType() == Message.MessageType.GET_BOARD) {
+					boardState = message.getBoardState();
+					System.out.println("server sent: " + Arrays.deepToString(message.getBoardState()));
+					primaryStage.setScene(createGamePage(primaryStage, boardState));
+//					primaryStage.setScene(sceneMap.get("userlist"));
+
+				}
 			});
 		});
 
@@ -64,7 +75,7 @@ public class GuiClient extends Application {
 //		client = new Client("localhost", 5555);
 
 		Scene welcomeScene = WelcomePage(primaryStage);
-//		Scene setBoatsScene = SetBoatsPage(primaryStage);
+		Scene setBoatsScene = SetBoatsPage(primaryStage);
 		Scene rulesScene = RulesPage(primaryStage);
 //		Scene clientScene = createClientGuiScene(primaryStage);
 
@@ -122,7 +133,7 @@ public class GuiClient extends Application {
 		borderPane.setBottom(buttonsVBox);
 
 		// Create the scene
-		Scene scene = new Scene(borderPane, 600, 400);
+		Scene scene = new Scene(borderPane, 800, 500);
 
 		return scene;
 
@@ -161,14 +172,20 @@ public class GuiClient extends Application {
 
 		Button startButton = createButtonInGame("Start"," #76b6c4");
 		startButton.setOnAction(e -> {
-			primaryStage.setScene(createGamePage(primaryStage));
+			// on start, send board to server, have server send board back before switching scene
+			sendBoardStateToServer();
+
+			// Switch to the game page
+//			primaryStage.setScene(createGamePage(primaryStage));
 		});
+
+		System.out.println("pritning board: " + gridPane);
 
 		Button regenerateButton = createButtonInGame("Regenerate", "#76b6c4");
 		regenerateButton.setOnAction(e -> {
 //			gridPane.getChildren().clear();
 //			gridPane = createGridPane();
-//			addRandomShips();
+			addRandomShips();
 		});
 
 		Button backButton = createButtonInGame("Back", "#76b6c4");
@@ -186,7 +203,7 @@ public class GuiClient extends Application {
 
 
 
-		Scene scene = new Scene(borderPane, 600, 400);
+		Scene scene = new Scene(borderPane, 800, 500);
 		return scene;
 	}
 
@@ -231,6 +248,9 @@ public class GuiClient extends Application {
 				{2, random.nextInt(GRID_SIZE - 1)}   // Destroyer (2 holes)
 		};
 
+		// Clear existing ship placements
+		clearGridPane(gridPane);
+
 		for (int[] ship : ships) {
 			int size = ship[0];
 			int startX = ship[1];
@@ -259,33 +279,44 @@ public class GuiClient extends Application {
 		}
 	}
 
+	private void clearGridPane(GridPane gridPane) {
+		// Clear all ship placements (rectangles filled with colors)
+		for (int row = 0; row < GRID_SIZE; row++) {
+			for (int col = 0; col < GRID_SIZE; col++) {
+				Rectangle rectangle = gridRectangles[row][col];
+				rectangle.setFill(Color.LIGHTBLUE); // Reset cell color
+			}
+		}
+	}
+
 	private Color getRandomColor() {
 		Random random = new Random();
 		return Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
 	}
 
-	private void addShipToGrid(int startX, int startY, int size, Color color) {
-		boolean canPlaceShip = true;
-		for (int i = 0; i < size; i++) {
-			if (startX + i >= GRID_SIZE || gridRectangles[startY][startX + i].getFill() != Color.LIGHTBLUE) {
-				// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
-				canPlaceShip = false;
-				break;
-			}
-		}
+//	private void addShipToGrid(int startX, int startY, int size, Color color) {
+//		boolean canPlaceShip = true;
+//		for (int i = 0; i < size; i++) {
+//			if (startX + i >= GRID_SIZE || gridRectangles[startY][startX + i].getFill() != Color.LIGHTBLUE) {
+//				// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
+//				canPlaceShip = false;
+//				break;
+//			}
+//		}
+//
+//		if (canPlaceShip) {
+//			for (int i = 0; i < size; i++) {
+//				Rectangle rectangle = gridRectangles[startY][startX + i];
+//				rectangle.setFill(color);
+//			}
+//		} else {
+//			// Retry placing the ship until it finds a valid position
+//			addRandomShips();
+//		}
+//	}
 
-		if (canPlaceShip) {
-			for (int i = 0; i < size; i++) {
-				Rectangle rectangle = gridRectangles[startY][startX + i];
-				rectangle.setFill(color);
-			}
-		} else {
-			// Retry placing the ship until it finds a valid position
-			addRandomShips();
-		}
-	}
 
-	private Scene createGamePage(Stage primaryStage) {
+	private Scene createGamePage(Stage primaryStage, int[][] boardState) {
 		BorderPane borderPane = new BorderPane();
 		borderPane.setPadding(new Insets(20));
 
@@ -298,9 +329,17 @@ public class GuiClient extends Application {
 		opponentGridTitle.setFill(Color.WHITE);
 
 		GridPane yourGridPane = createGridPane();
-		addRandomShips(); // update this to get actual grid
+//		Rectangle rectangle = new Rectangle(30, 30);
+//		rectangle.setFill(Color.LIGHTBLUE);
+////		gridRectangles = rectangle;
+//		int col = Arrays.stream(boardState).findFirst();
+//		gridPane.add(rectangle, col, row);
+//		yourGridPane.add();
 
-		GridPane opponentGridPane = createGridPane(); //  need to make a new method to get an actual grid
+		addRandomShips(); // update this to get actual grid
+//
+		GridPane opponentGridPane = createOpponentGridPane(); // Create opponent's grid pane
+		addOpponentGridClickHandlers(opponentGridPane); // Add event handlers to opponent's grid
 
 		VBox yourGridVBox = new VBox(10, yourGridTitle, yourGridPane);
 		yourGridVBox.setAlignment(Pos.CENTER);
@@ -322,6 +361,78 @@ public class GuiClient extends Application {
 		Scene scene = new Scene(borderPane, 800, 400);
 		return scene;
 	}
+
+	private GridPane createOpponentGridPane() {
+		GridPane gridPane = new GridPane();
+		gridPane.setPadding(new Insets(10));
+		gridPane.setHgap(2);
+		gridPane.setVgap(2);
+
+		// Add labels to the grid
+		for (int row = 0; row < GRID_SIZE; row++) {
+			for (int col = 0; col < GRID_SIZE; col++) {
+				Rectangle rectangle = new Rectangle(30, 30);
+				rectangle.setFill(Color.LIGHTBLUE);
+				gridRectangles[row][col] = rectangle;
+				gridPane.add(rectangle, col, row);
+			}
+		}
+		return gridPane;
+	}
+
+	private void addOpponentGridClickHandlers(GridPane opponentGridPane) {
+		for (int row = 0; row < GRID_SIZE; row++) {
+			for (int col = 0; col < GRID_SIZE; col++) {
+				Rectangle rectangle = gridRectangles[row][col];
+				int finalRow = row;
+				int finalCol = col;
+				rectangle.setOnMouseClicked(event -> handleOpponentGridClick(finalRow, finalCol));
+			}
+		}
+	}
+
+	private void handleOpponentGridClick(int row, int col) {
+		// Assuming you have a method to send the shot coordinates to the opponent
+		// For example, clientConnection.sendShot(row, col);
+
+		// For demonstration purposes, let's simulate a hit or a miss randomly
+		Random random = new Random();
+		boolean isHit = random.nextBoolean();
+
+		// Update the display based on the result of the shot (hit or miss)
+		Rectangle targetRectangle = gridRectangles[row][col];
+		if (isHit) {
+			// Change the color of the rectangle to indicate a hit
+			targetRectangle.setFill(Color.RED);
+			// You can also update the opponent's grid to show the result of the shot
+			// For example: opponentGridPane.getChildren().get(row * GRID_SIZE + col).setFill(Color.RED);
+		} else {
+			// Change the color of the rectangle to indicate a miss
+			targetRectangle.setFill(Color.GRAY);
+		}
+	}
+
+
+	private void sendBoardStateToServer() {
+		int[][] boardState = new int[GRID_SIZE][GRID_SIZE];
+		for (int row = 0; row < GRID_SIZE; row++) {
+			for (int col = 0; col < GRID_SIZE; col++) {
+				Color cellColor = (Color) gridRectangles[row][col].getFill();
+				if (cellColor.equals(Color.LIGHTBLUE)) {
+					// Cell is empty
+					boardState[row][col] = 0;
+				} else {
+					// Cell contains a ship
+					boardState[row][col] = 1;
+				}
+			}
+		}
+		Message gameState = new Message(Message.MessageType.SET_BOARD, boardState);
+
+		// Send the GameState object to the server
+		clientConnection.send(gameState);
+	}
+
 
 	private Scene RulesPage(Stage primaryStage) {
 		// TEMP: copied from chat

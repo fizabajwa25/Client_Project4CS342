@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Client extends Thread{
@@ -30,18 +31,22 @@ public class Client extends Thread{
 		while(true) {
 
 			try {
-				String message = in.readObject().toString();
-				callback.accept(message);
+//				String message = in.readObject().toString();
+//				callback.accept(message);
+				Message data = (Message) in.readObject();
+				callback.accept(data);
+				System.out.println("message sent from server:" + data.getType());
 			}
 			catch(Exception e) {}
 		}
 
 	}
 
-	public void send(String data) {
+	public void send(Message data) {
 
 		try {
 			out.writeObject(data);
+			System.out.println("sent to server: "+ Arrays.deepToString(data.getBoardState()));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
