@@ -1,45 +1,52 @@
 import java.io.*;
 import java.net.*;
+import java.util.function.Consumer;
 
-public class Client {
-	private Socket socket;
-	private ObjectOutputStream out;
-	private ObjectInputStream in;
+public class Client extends Thread{
 
-	public Client(String address, int port) {
+
+	Socket socketClient;
+
+	ObjectOutputStream out;
+	ObjectInputStream in;
+
+	private Consumer<Serializable> callback;
+
+	Client(Consumer<Serializable> call){
+
+		callback = call;
+	}
+
+	public void run() {
+
 		try {
-			socket = new Socket(address, port);
-			out = new ObjectOutputStream(socket.getOutputStream());
-			in = new ObjectInputStream(socket.getInputStream());
+			socketClient= new Socket("127.0.0.1",5555);
+			out = new ObjectOutputStream(socketClient.getOutputStream());
+			in = new ObjectInputStream(socketClient.getInputStream());
+			socketClient.setTcpNoDelay(true);
+		}
+		catch(Exception e) {}
+
+		while(true) {
+
+			try {
+				String message = in.readObject().toString();
+				callback.accept(message);
+			}
+			catch(Exception e) {}
+		}
+
+	}
+
+	public void send(String data) {
+
+		try {
+			out.writeObject(data);
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public void sendMessage(Message message) {
-		try {
-			out.writeObject(message);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
-	public Message receiveMessage() {
-		try {
-			return (Message) in.readObject();
-		} catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return null; // return null if there was an error
-	}
-
-	public void close() {
-		try {
-			out.close();
-			in.close();
-			socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 }

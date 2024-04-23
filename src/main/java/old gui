@@ -1,0 +1,378 @@
+public class GuiClient extends Application {
+	private Client clientConnection;
+	private TextArea textArea;
+	private TextField inputField;
+	private Button sendButton;
+	private GridPane gridPane;
+	private Ship selectedShip;
+
+	private Stage primaryStage;
+	HashMap<String, Scene> sceneMap;
+
+
+	private int[][] gameBoard; // 10x10 matrix to represent the game board
+//	private static final int BOARD_SIZE = 10;
+//	private static final char[] ROW_LABELS = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
+
+//	private int[][] gameBoard = new int[BOARD_SIZE][BOARD_SIZE];
+//	private Button[][] buttons = new Button[BOARD_SIZE][BOARD_SIZE];
+
+	private final int EMPTY = 0; // Constant to represent an empty spot
+	private final int SHIP1 = 1; // Constant to represent the first type of ship
+	ListView<String> listItems2;
+
+
+	// Paths of battleship images
+	private final String[] battleshipImagePaths = {
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_airCarrierh.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_airCarrierv.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_boath.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_boatv.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_cruiserh.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_cruiserv.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_destroyerh.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_destroyerv.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_submarineh.png",
+			"C:\\Users\\aleen\\Documents\\CS 342\\Client_Project4CS342\\src\\main\\Resources\\ship_submarinev.png",
+			// Add paths for other battleship images here
+	};
+
+	private void handleShipSelection(Ship ship) {
+		selectedShip = ship;
+	}
+
+
+	@Override
+	public void start(Stage primaryStage) {
+		listItems2 = new ListView<>();
+		clientConnection = new Client(data->{
+			Platform.runLater(()->{listItems2.getItems().add(data.toString());
+			});
+		});
+
+		clientConnection.start();
+
+		gameBoard = new int[10][10]; // Initialize the game board
+		this.primaryStage = primaryStage;
+		sceneMap = new HashMap<String, Scene>();
+
+//		client = new Client("localhost", 5555);
+
+		Scene loginScene = WelcomePage(primaryStage);
+		Scene placeShipsScene = setupGamePage(primaryStage);
+//		Scene clientScene = createClientGuiScene(primaryStage);
+
+		sceneMap.put("Welcome", WelcomePage(primaryStage));
+		sceneMap.put("Set up", setupGamePage(primaryStage));
+		// Add scenes for "Rules" and "Game"
+//		sceneMap.put("Rules", RulesPage(primaryStage)); // Assuming you have a RulesPage method
+		// Add scenes for other pages as needed
+
+		// Set the initial scene
+		primaryStage.setTitle("Welcome to Battleship");
+		primaryStage.centerOnScreen();
+		primaryStage.setScene(sceneMap.get("Welcome"));
+		primaryStage.show();
+
+	}
+
+	private Scene WelcomePage(Stage primaryStage) {
+		// Title on welcome page
+		Text title = new Text("Battleship");
+		title.setFont(Font.font("Lucida Calligraphy", 140));
+		title.setFill(Color.rgb(247, 231, 231));
+		title.setTextAlignment(TextAlignment.CENTER);
+
+		Button rulesButton = new Button("Rules");
+		Button playButton = new Button("Play");
+		rulesButton.setStyle("-fx-font-family: 'Garamond';-fx-font-size: 40px; -fx-background-color: #800000; -fx-text-fill: white; -fx-pref-width: 200; -fx-pref-height: 50px; -fx-background-radius: 10px;-fx-font-weight: 600");
+		playButton.setStyle("-fx-font-family: 'Garamond';-fx-font-size: 40px; -fx-background-color: #800000; -fx-text-fill: white; -fx-pref-width: 200; -fx-pref-height: 50px; -fx-background-radius: 10px;-fx-font-weight: 600");
+
+		HBox frontPageBox = new HBox(20, rulesButton, playButton);
+		frontPageBox.setAlignment(Pos.CENTER);
+
+		VBox allElements = new VBox(70, title, frontPageBox);
+		allElements.setAlignment(Pos.CENTER);
+
+		BorderPane borderPane = new BorderPane();
+		borderPane.setPrefSize(1000, 650);
+		borderPane.setPadding(new Insets(100));
+
+		borderPane.setCenter(allElements);
+		BorderPane.setAlignment(allElements, Pos.CENTER);
+
+		borderPane.setStyle("-fx-background-color: #191970;");
+
+		// Rules page
+		rulesButton.setOnAction(event -> {
+			RulesPage();
+			primaryStage.setScene(sceneMap.get("Rules"));
+		});
+
+		// Play page
+		playButton.setOnAction(event -> {
+			primaryStage.setScene(sceneMap.get("Set up"));
+		});
+
+		// Create and return the scene
+		return new Scene(borderPane);
+	}
+
+
+	private Scene setupGamePage(Stage primaryStage) {
+
+		// Define ship instances with size, color, and type
+		Ship carrier = new Ship(5, Color.PURPLE, "Carrier");
+		Ship battleship = new Ship(4, Color.ORANGE, "Battleship");
+		Ship cruiser = new Ship(3, Color.BLUE, "Cruiser");
+		Ship destroyer = new Ship(2, Color.GREEN, "Destroyer");
+
+		// Create a GridPane for the game board
+		gridPane = new GridPane();
+		gridPane.setPadding(new Insets(10));
+		gridPane.setHgap(5);
+		gridPane.setVgap(5);
+
+		// Initialize the game board
+		for (int i = 0; i < 10; i++) {
+			for (int j = 0; j < 10; j++) {
+				gameBoard[i][j] = EMPTY; // Set all squares initially empty
+			}
+		}
+
+		// Grid for the battleship game
+		gridPane = new GridPane();
+		gridPane.setPadding(new Insets(10));
+		gridPane.setHgap(5);
+		gridPane.setVgap(5);
+
+		// buttons for each square
+		for (int i = 0; i < 10; i++) {
+			for (int j = 0; j < 10; j++) {
+				Button button = new Button();
+				button.setPrefSize(30, 30);
+				final int row = i, col = j;
+				button.setOnAction(event -> handleCellAction(row, col, carrier, battleship, cruiser, destroyer));
+				gridPane.add(button, j, i);
+			}
+		}
+
+		// Create an HBox to hold the battleship images
+		HBox battleshipImagesBox = new HBox();
+		battleshipImagesBox.setSpacing(10);
+
+		// Load and add battleship images to the HBox
+		for (String imagePath : battleshipImagePaths) {
+			Image battleshipImage = new Image("file:" + imagePath); // Load image from file
+			ImageView battleshipImageView = new ImageView(battleshipImage);
+			battleshipImageView.setFitWidth(50); // Set width of the battleship image
+			battleshipImageView.setFitHeight(50); // Set height of the battleship image
+
+			// Set event handlers for ship selection
+		//	battleshipImageView.setOnMouseClicked(event -> handleShipSelection(new Ship(size, color, type)));
+
+			battleshipImagesBox.getChildren().add(battleshipImageView);
+		}
+
+//			// Set event handlers for drag-and-drop functionality
+//			battleshipImageView.setOnDragDetected(event -> {
+//				Dragboard db = battleshipImageView.startDragAndDrop(TransferMode.ANY);
+//				ClipboardContent content = new ClipboardContent();
+//				content.putImage(battleshipImage);
+//				db.setContent(content);
+//				event.consume();
+//			});
+//
+//			battleshipImagesBox.getChildren().add(battleshipImageView);
+//		}
+
+		// Create a VBox to hold the game board and the images
+		VBox root = new VBox(10, gridPane, battleshipImagesBox);
+
+		// Create the scene and add it to the scenes HashMap
+		Scene gameScene = new Scene(root, 800, 650); // Set scene dimensions as needed
+//		//scenes.put("Game", gameScene);
+		return gameScene;
+	}
+
+	private void handleCellAction(int row, int col, Ship carrier, Ship battleship, Ship cruiser, Ship destroyer) {
+		// Toggle the status of the square when clicked
+		if (gameBoard[row][col] == EMPTY) {
+			// Check if a ship is selected
+			if (selectedShip != null) {
+				// Check if the selected ship fits in the current position
+				if (canPlaceShip(row, col, selectedShip)) {
+					// Place the ship on the game board
+					placeShip(row, col, selectedShip);
+					// Update visualization
+					Button button = (Button) gridPane.getChildren().get(row * 10 + col);
+					button.setStyle("-fx-background-color: " + selectedShip.getColor() + ";");
+				} else {
+					// Display a message indicating that the ship cannot be placed in the current position
+					System.out.println("Cannot place the selected ship in the current position.");
+				}
+			} else {
+				// Display a message indicating that no ship is selected
+				System.out.println("Please select a ship first.");
+			}
+		} else {
+			// Remove the ship from the square
+			gameBoard[row][col] = EMPTY;
+			// Update visualization
+			Button button = (Button) gridPane.getChildren().get(row * 10 + col);
+			button.setStyle("-fx-background-color: white;");
+		}
+	}
+
+	private Ship determineSelectedShip(Ship carrier, Ship battleship, Ship cruiser, Ship destroyer) {
+		// Determine which ship is selected based on some criteria, such as user input or default selection
+		// For now, let's assume the carrier is always selected
+		return carrier;
+	}
+
+	private boolean canPlaceShip(int row, int col, Ship ship) {
+		// Implement logic to check if the ship can be placed in the current position
+		// For now, let's assume any ship can be placed anywhere
+		return true;
+	}
+
+	private void placeShip(int row, int col, Ship ship) {
+		// Implement logic to place the ship on the game board
+		// For now, let's assume the ship is placed without any restrictions
+		gameBoard[row][col] = SHIP1;
+
+	}
+
+
+	private void RulesPage() {
+		// Implementation of Rules page
+		// Create a new scene for Rules page and add it to the scenes HashMap
+
+		// Create a Vbox for the RulesPage
+		VBox ruleScene = new VBox();
+		ruleScene.setAlignment(Pos.CENTER);
+
+	}
+
+	// Other methods like handleSquareClick and handleCellAction remain unchanged
+
+	public static void main(String[] args) {
+		launch(args);
+	}
+}
+
+//
+//	private void setupGamePage() {
+//		// Create a GridPane for the game board
+//		gridPane = new GridPane();
+//		gridPane.setGridLinesVisible(true); // Show grid lines for better visualization
+//
+//
+//
+//		// Grid for the battleship game
+//		gridPane = new GridPane();
+//		gridPane.setPadding(new Insets(10));
+//		gridPane.setHgap(5);
+//		gridPane.setVgap(5);
+//		for (int i = 0; i < 10; i++) {
+//			for (int j = 0; j < 10; j++) {
+//				Button button = new Button();
+//				button.setPrefSize(30, 30);
+//				final int row = i, col = j;
+//				button.setOnAction(event -> handleCellAction(row, col));
+//				gridPane.add(button, j, i);
+//			}
+//		}
+//
+//		// Create an HBox to hold the battleship images
+//		HBox battleshipImagesBox = new HBox();
+//		battleshipImagesBox.setSpacing(10);
+//
+//		// Load and add battleship images to the HBox
+//		for (String imagePath : battleshipImagePaths) {
+//			Image battleshipImage = new Image(imagePath);
+//			ImageView battleshipImageView = new ImageView(battleshipImage);
+////			battleshipImageView.setFitWidth(200); // Set width of the battleship image
+////			battleshipImageView.setFitHeight(50); // Set height of the battleship image
+////			battleshipImageView.setPreserveRatio(true); // Preserve the aspect ratio of the image
+//
+//			// Set fit width and fit height to USE_PREF_SIZE to adapt to the actual size of the image
+////			battleshipImageView.setFitWidth(Region.USE_PREF_SIZE);
+////			battleshipImageView.setFitHeight(Region.USE_PREF_SIZE);
+//
+//			// Set event handlers for drag-and-drop functionality
+//			battleshipImageView.setOnDragDetected(event -> {
+//				Dragboard db = battleshipImageView.startDragAndDrop(TransferMode.ANY);
+//				ClipboardContent content = new ClipboardContent();
+//				content.putImage(battleshipImage);
+//				db.setContent(content);
+//				event.consume();
+//			});
+//
+//			battleshipImagesBox.getChildren().add(battleshipImageView);
+//		}
+//
+//		// Add event handlers to grid squares for drag-and-drop functionality
+//		for (int i = 0; i < 10; i++) {
+//			for (int j = 0; j < 10; j++) {
+//				Rectangle square = new Rectangle(30, 30, Color.WHITE); // Create a square
+//				final int row = i, col = j;
+//
+//				// Set up drag over event handler
+//				square.setOnDragOver(event -> {
+//					if (event.getGestureSource() != square &&
+//							event.getDragboard().hasImage()) {
+//						event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+//					}
+//					event.consume();
+//				});
+//
+//				// Set up drag dropped event handler
+//				square.setOnDragDropped(event -> {
+//					Dragboard db = event.getDragboard();
+//					boolean success = false;
+//					if (db.hasImage()) {
+//						ImageView imageView = new ImageView(db.getImage());
+//						StackPane stackPane = new StackPane();
+//						stackPane.getChildren().addAll(square, imageView);
+//						gridPane.add(stackPane, col, row);
+//						success = true;
+//					}
+//					event.setDropCompleted(success);
+//					event.consume();
+//				});
+//
+//				gridPane.add(square, j, i);
+//			}
+//		}
+//
+//		// Create an HBox to hold the battleship images
+//	//	HBox battleshipImagesBox = new HBox();
+//		battleshipImagesBox.setSpacing(10);
+//
+//		// Load and add battleship images to the HBox
+//		for (String imagePath : battleshipImagePaths) {
+//			Image battleshipImage = new Image("file:" + imagePath); // Load image from file
+//			ImageView battleshipImageView = new ImageView(battleshipImage);
+//			battleshipImageView.setFitWidth(50); // Set width of the battleship image
+//			battleshipImageView.setFitHeight(50); // Set height of the battleship image
+//
+//			// Set event handlers for drag-and-drop functionality
+//			battleshipImageView.setOnDragDetected(event -> {
+//				Dragboard db = battleshipImageView.startDragAndDrop(TransferMode.ANY);
+//				ClipboardContent content = new ClipboardContent();
+//				content.putImage(battleshipImage);
+//				db.setContent(content);
+//				event.consume();
+//			});
+//
+//			battleshipImagesBox.getChildren().add(battleshipImageView);
+//		}
+//
+//		// Create a VBox to hold the game board and the images
+//		VBox root = new VBox(10, gridPane, battleshipImagesBox);
+//
+//		// Create the scene and add it to the scenes HashMap
+//		Scene gameScene = new Scene(root, 800, 650); // Set scene dimensions as needed
+//		scenes.put("Game", gameScene);
+//	}
