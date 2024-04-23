@@ -40,6 +40,8 @@ public class GuiClient extends Application {
 	private final int GRID_SIZE = 10;
 	private Rectangle[][] gridRectangles;
 	int[][] boardState = new int[GRID_SIZE][GRID_SIZE];
+	private int[][] opponentBoardState = new int[GRID_SIZE][GRID_SIZE]; // Array to store opponent's ships
+
 
 
 	public static void main(String[] args) {
@@ -371,24 +373,34 @@ public class GuiClient extends Application {
 		Scene scene = new Scene(borderPane, 800, 400);
 		return scene;
 	}
-
 	private GridPane createOpponentGridPane() {
 		GridPane gridPane = new GridPane();
 		gridPane.setPadding(new Insets(10));
 		gridPane.setHgap(2);
 		gridPane.setVgap(2);
 
-		// Add labels to the grid
+		// Initialize opponent's ship placements
 		for (int row = 0; row < GRID_SIZE; row++) {
 			for (int col = 0; col < GRID_SIZE; col++) {
+				opponentBoardState[row][col] = 0; // Ensuring all cells are initially set to no ship
 				Rectangle rectangle = new Rectangle(30, 30);
 				rectangle.setFill(Color.LIGHTBLUE);
 				gridRectangles[row][col] = rectangle;
 				gridPane.add(rectangle, col, row);
 			}
 		}
+
+//		// Place ships randomly
+//		addRandomShips(opponentBoardState);
+
 		return gridPane;
 	}
+
+
+	private void addRandomShips(int[][] boardState) {
+		// Your existing logic to randomly generate opponent's ship placements goes here
+	}
+
 
 	private void addOpponentGridClickHandlers(GridPane opponentGridPane) {
 		for (int row = 0; row < GRID_SIZE; row++) {
@@ -402,25 +414,63 @@ public class GuiClient extends Application {
 	}
 
 	private void handleOpponentGridClick(int row, int col) {
-		// Assuming you have a method to send the shot coordinates to the opponent
-		// For example, clientConnection.sendShot(row, col);
-
-		// For demonstration purposes, let's simulate a hit or a miss randomly
 		Random random = new Random();
 		boolean isHit = random.nextBoolean();
 
-		// Update the display based on the result of the shot (hit or miss)
 		Rectangle targetRectangle = gridRectangles[row][col];
-		if (isHit) {
-			// Change the color of the rectangle to indicate a hit
-			targetRectangle.setFill(Color.RED);
-			// You can also update the opponent's grid to show the result of the shot
-			// For example: opponentGridPane.getChildren().get(row * GRID_SIZE + col).setFill(Color.RED);
+		if (boardState[row][col] == 1) { // Check if there is a ship in the clicked position
+			if (isHit) {
+				targetRectangle.setFill(Color.RED); // If hit, change color to red
+			} else {
+				targetRectangle.setFill(Color.GRAY); // If miss, change color to gray
+			}
 		} else {
-			// Change the color of the rectangle to indicate a miss
-			targetRectangle.setFill(Color.GRAY);
+			targetRectangle.setFill(Color.GRAY); // If no ship, change color to gray (indicating a miss)
 		}
 	}
+
+	public void placeShipsForAI() {
+		int[] shipSizes = {5, 4, 3, 2};  // Sizes of the ships to place
+		Random random = new Random();
+
+		for (int size : shipSizes) {
+			boolean placed = false;
+			while (!placed) {
+				int x = random.nextInt(GRID_SIZE);
+				int y = random.nextInt(GRID_SIZE);
+				boolean horizontal = random.nextBoolean();  // Randomly placing the ship horizontally or vertically
+
+				if (canPlaceShip(x, y, size, horizontal)) {
+					for (int i = 0; i < size; i++) {
+						if (horizontal) {
+							opponentBoardState[x][y + i] = 1;  // Place ship part
+						} else {
+							opponentBoardState[x + i][y] = 1;  // Place ship part
+						}
+					}
+					placed = true;
+				}
+			}
+		}
+	}
+
+	private boolean canPlaceShip(int x, int y, int size, boolean horizontal) {
+		if (horizontal) {
+			if (y + size > GRID_SIZE) return false;  // Check if ship goes out of bounds
+			for (int i = 0; i < size; i++) {
+				if (opponentBoardState[x][y + i] != 0) return false;  // Check if the spot is already taken
+			}
+		} else {
+			if (x + size > GRID_SIZE) return false;  // Check if ship goes out of bounds
+			for (int i = 0; i < size; i++) {
+				if (opponentBoardState[x + i][y] != 0) return false;  // Check if the spot is already taken
+			}
+		}
+		return true;
+	}
+
+
+
 
 
 	private void sendBoardStateToServer() {
