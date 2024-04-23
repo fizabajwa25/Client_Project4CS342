@@ -1,14 +1,7 @@
-import javafx.application.Platform;
-
-import java.awt.*;
 import java.io.*;
 import java.net.*;
-
+import java.util.Arrays;
 import java.util.function.Consumer;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-
-import javafx.scene.shape.Rectangle;
 
 public class Client extends Thread{
 
@@ -17,9 +10,6 @@ public class Client extends Thread{
 
 	ObjectOutputStream out;
 	ObjectInputStream in;
-
-	private Rectangle[][] gridRectangles;
-
 
 	private Consumer<Serializable> callback;
 
@@ -41,56 +31,27 @@ public class Client extends Thread{
 		while(true) {
 
 			try {
-				String message = in.readObject().toString();
-				callback.accept(message);
+//				String message = in.readObject().toString();
+//				callback.accept(message);
+				Message data = (Message) in.readObject();
+				callback.accept(data);
+				System.out.println("message sent from server:" + data.getType());
 			}
 			catch(Exception e) {}
 		}
 
 	}
 
-	public void send(String data) {
+	public void send(Message data) {
 
 		try {
 			out.writeObject(data);
+			System.out.println("sent to server: "+ Arrays.deepToString(data.getBoardState()));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-
-	private void handleHitOrMiss(Serializable data) {
-		// Parse the message from the server
-		if (data instanceof String) {
-			String message = (String) data;
-			// Example message format: "HIT:3,4" or "MISS:5,6"
-			String[] parts = message.split(":");
-			if (parts.length == 2) {
-				String[] coordinates = parts[1].split(",");
-				if (coordinates.length == 2) {
-					int row = Integer.parseInt(coordinates[0]);
-					int col = Integer.parseInt(coordinates[1]);
-					if (parts[0].equals("HIT")) {
-						// Update the client's grid to show a hit at the specified coordinates
-						Platform.runLater(() -> updateGridCell(row, col, Color.RED));
-					} else if (parts[0].equals("MISS")) {
-						// Update the client's grid to show a miss at the specified coordinates
-						Platform.runLater(() -> updateGridCell(row, col, Color.GRAY));
-					}
-				}
-			}
-		}
-	}
-
-	// Helper method to update a grid cell's color
-
-
-	private void updateGridCell(int row, int col, Color color) {
-		Rectangle cell = gridRectangles[row][col];
-		Paint paint = Color.valueOf(color.toString());
-		cell.setFill(paint);
-	}
-
 
 
 }
