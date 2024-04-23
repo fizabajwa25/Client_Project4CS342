@@ -1,8 +1,15 @@
+import java.awt.*;
 import java.io.Serializable;
 
 public class Message implements Serializable {
     private static final long serialVersionUID = 42L;
+    private static final int GRID_SIZE = 10; // Assuming a grid size of 10x10
+
     private int[][] boardState;
+    private int[][] opponentBoardState = new int[GRID_SIZE][GRID_SIZE];
+    private Rectangle[][] gridRectangles = new Rectangle[GRID_SIZE][GRID_SIZE]; // GUI rectangles for the grid
+
+
     private MessageType type;
 
     public enum MessageType {
