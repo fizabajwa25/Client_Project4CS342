@@ -161,12 +161,14 @@ public class GuiClient extends Application {
 
 		Button startButton = createButtonInGame("Start"," #76b6c4");
 		startButton.setOnAction(e -> {
-			// Handle start button action
+			primaryStage.setScene(createGamePage(primaryStage));
 		});
 
 		Button regenerateButton = createButtonInGame("Regenerate", "#76b6c4");
 		regenerateButton.setOnAction(e -> {
-			// Handle start button action
+//			gridPane.getChildren().clear();
+//			gridPane = createGridPane();
+//			addRandomShips();
 		});
 
 		Button backButton = createButtonInGame("Back", "#76b6c4");
@@ -281,6 +283,44 @@ public class GuiClient extends Application {
 			// Retry placing the ship until it finds a valid position
 			addRandomShips();
 		}
+	}
+
+	private Scene createGamePage(Stage primaryStage) {
+		BorderPane borderPane = new BorderPane();
+		borderPane.setPadding(new Insets(20));
+
+		Text yourGridTitle = new Text("Your Grid");
+		yourGridTitle.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+		yourGridTitle.setFill(Color.WHITE);
+
+		Text opponentGridTitle = new Text("Opponent's Grid");
+		opponentGridTitle.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+		opponentGridTitle.setFill(Color.WHITE);
+
+		GridPane yourGridPane = createGridPane();
+		addRandomShips(); // update this to get actual grid
+
+		GridPane opponentGridPane = createGridPane(); //  need to make a new method to get an actual grid
+
+		VBox yourGridVBox = new VBox(10, yourGridTitle, yourGridPane);
+		yourGridVBox.setAlignment(Pos.CENTER);
+
+		VBox opponentGridVBox = new VBox(10, opponentGridTitle, opponentGridPane);
+		opponentGridVBox.setAlignment(Pos.CENTER);
+
+		borderPane.setLeft(yourGridVBox);
+		borderPane.setRight(opponentGridVBox);
+
+		Button backButton = createButtonInGame("Back", "#76b6c4");
+		backButton.setOnAction(e -> primaryStage.setScene(sceneMap.get("Welcome")));
+
+		borderPane.setBottom(backButton);
+		BorderPane.setAlignment(backButton, Pos.CENTER);
+
+		borderPane.setStyle("-fx-background-color: linear-gradient(to bottom, #003366, #000033);");
+
+		Scene scene = new Scene(borderPane, 800, 400);
+		return scene;
 	}
 
 	private Scene RulesPage(Stage primaryStage) {
