@@ -51,19 +51,6 @@ public class GuiClient extends Application {
 		launch(args);
 	}
 
-	//	public GuiClient() {
-//		clientConnection = new Client(data -> {
-//			Platform.runLater(() -> {
-//				listItems2.getItems().add(data.toString());
-//				message = (Message) data;
-//				if (message.getType() == Message.MessageType.GET_BOARD) {
-//					boardState = message.getBoardState();
-//					System.out.println("server sent: " + Arrays.deepToString(message.getBoardState()));
-//					primaryStage.setScene(createGamePage(primaryStage));
-//				}
-//			});
-//		});
-//	}
 	@Override
 	public void start(Stage primaryStage) {
 		listItems2 = new ListView<>();
@@ -110,14 +97,6 @@ public class GuiClient extends Application {
 		primaryStage.setScene(sceneMap.get("Welcome"));
 		primaryStage.show();
 
-
-//	public Scene createClientGui() {
-//
-//		clientBox = new VBox(10, c1,b1,listItems2);
-//		clientBox.setStyle("-fx-background-color: blue;"+"-fx-font-family: 'serif';");
-//		return new Scene(clientBox, 400, 300);
-//
-//	}
 	}
 
 	private Scene WelcomePage(Stage primaryStage) {
@@ -202,22 +181,19 @@ public class GuiClient extends Application {
 			// on start, send board to server, have server send board back before switching scene
 			sendBoardStateToServer();
 
-			// Get the board state and opponent board state from the SetBoatsPage
-			int[][] boardState = this.boardState;
-			int[][] opponentBoardState = this.opponentBoardState;
+			// Generate ships for the player
+			boardState = generateRandomPlayerBoard();
+
+			// Generate ships for the opponent
+			int[][] opponentBoardState = generateRandomOpponentBoard(boardState);
 
 			//  Switch to the game page and pass the board states
 			primaryStage.setScene(createGamePage(primaryStage, boardState, opponentBoardState));
 		});
 
-
-//		System.out.println("printing board: " + gridPane);
-
 		Button regenerateButton = createButtonInGame("Regenerate", "#76b6c4");
 		regenerateButton.setOnAction(e -> {
-//			gridPane.getChildren().clear();
-//			gridPane = createGridPane();
-			addRandomShips();
+			generateRandomPlayerBoard();
 		});
 
 		Button backButton = createButtonInGame("Back", "#76b6c4");
@@ -342,6 +318,128 @@ public class GuiClient extends Application {
 		}
 	}
 
+	private int[][] generateRandomPlayerBoard() {
+		int[][] playerBoardState = new int[GRID_SIZE][GRID_SIZE];
+		Random random = new Random();
+
+		// Define the ships
+		int[][] ships = {
+				{5, random.nextInt(GRID_SIZE - 4)},  // Carrier (5 holes)
+				{4, random.nextInt(GRID_SIZE - 3)},  // Battleship (4 holes)
+				{3, random.nextInt(GRID_SIZE - 2)},  // Cruiser (3 holes)
+				{3, random.nextInt(GRID_SIZE - 2)},  // Submarine (3 holes)
+				{2, random.nextInt(GRID_SIZE - 1)}   // Destroyer (2 holes)
+		};
+
+		// Place ships randomly
+		for (int[] ship : ships) {
+			int size = ship[0];
+			int startX = ship[1];
+			int startY = random.nextInt(GRID_SIZE);
+			boolean horizontal = random.nextBoolean();
+
+			boolean canPlaceShip;
+			do {
+				canPlaceShip = true;
+				for (int i = 0; i < size; i++) {
+					if (horizontal) {
+						if (startX + i >= GRID_SIZE || playerBoardState[startY][startX + i] != 0) {
+							// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
+							canPlaceShip = false;
+							startX = random.nextInt(GRID_SIZE - size + 1);
+							startY = random.nextInt(GRID_SIZE);
+							break;
+						}
+					} else {
+						if (startY + i >= GRID_SIZE || playerBoardState[startY + i][startX] != 0) {
+							// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
+							canPlaceShip = false;
+							startX = random.nextInt(GRID_SIZE);
+							startY = random.nextInt(GRID_SIZE - size + 1);
+							break;
+						}
+					}
+				}
+			} while (!canPlaceShip);
+
+			for (int i = 0; i < size; i++) {
+				if (horizontal) {
+					playerBoardState[startY][startX + i] = 1;  // Place ship part
+				} else {
+					playerBoardState[startY + i][startX] = 1;  // Place ship part
+				}
+			}
+		}
+
+		return playerBoardState;
+	}
+
+	private int[][] generateRandomOpponentBoard(int[][] playerBoardState) {
+		int[][] opponentBoardState = new int[GRID_SIZE][GRID_SIZE];
+		Random random = new Random();
+
+		// Define the ships
+		int[][] ships = {
+				{5, random.nextInt(GRID_SIZE - 4)},  // Carrier (5 holes)
+				{4, random.nextInt(GRID_SIZE - 3)},  // Battleship (4 holes)
+				{3, random.nextInt(GRID_SIZE - 2)},  // Cruiser (3 holes)
+				{3, random.nextInt(GRID_SIZE - 2)},  // Submarine (3 holes)
+				{2, random.nextInt(GRID_SIZE - 1)}   // Destroyer (2 holes)
+		};
+
+		// Place ships randomly for the opponent
+		for (int[] ship : ships) {
+			int size = ship[0];
+			int startX = ship[1];
+			int startY = random.nextInt(GRID_SIZE);
+			boolean horizontal = random.nextBoolean();
+
+			boolean canPlaceShip;
+			do {
+				canPlaceShip = true;
+				for (int i = 0; i < size; i++) {
+					if (horizontal) {
+						if (startX + i >= GRID_SIZE || opponentBoardState[startY][startX + i] != 0 || playerBoardState[startY][startX + i] != 0) {
+							// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
+							canPlaceShip = false;
+							startX = random.nextInt(GRID_SIZE - size + 1);
+							startY = random.nextInt(GRID_SIZE);
+							break;
+						}
+					} else {
+						if (startY + i >= GRID_SIZE || opponentBoardState[startY + i][startX] != 0 || playerBoardState[startY + i][startX] != 0) {
+							// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
+							canPlaceShip = false;
+							startX = random.nextInt(GRID_SIZE);
+							startY = random.nextInt(GRID_SIZE - size + 1);
+							break;
+						}
+					}
+				}
+			} while (!canPlaceShip);
+
+			for (int i = 0; i < size; i++) {
+				if (horizontal) {
+					opponentBoardState[startY][startX + i] = 1;  // Place ship part
+				} else {
+					opponentBoardState[startY + i][startX] = 1;  // Place ship part
+				}
+			}
+		}
+
+		// Create a hidden version of the opponent's board
+		int[][] hiddenOpponentBoard = new int[GRID_SIZE][GRID_SIZE];
+		for (int i = 0; i < GRID_SIZE; i++) {
+			for (int j = 0; j < GRID_SIZE; j++) {
+				// Hide ship placements by setting all cells to 0
+				hiddenOpponentBoard[i][j] = 0;
+			}
+		}
+
+		return hiddenOpponentBoard;
+	}
+
+
 	private Scene createGamePage(Stage primaryStage, int[][] boardState, int[][] opponentBoardState) {
 		System.out.println("when do i reach create game page?");
 		BorderPane borderPane = new BorderPane();
@@ -369,10 +467,13 @@ public class GuiClient extends Application {
 		printBoats(yourGridPane, boardState);
 //		addRandomShips();
 
-		GridPane opponentGridPane = createOpponentGridPane(); // Create opponent's grid pane
+		GridPane opponentGridPane = createOpponentGridPane(boardState);
 		this.opponentBoardState = opponentBoardState;
 		printBoats(opponentGridPane, opponentBoardState);
 //		addOpponentGridClickHandlers(opponentGridPane); // Add event handlers to opponent's grid
+
+		// Generate opponent's ships separately
+		//int[][] opponentBoardState = generateRandomOpponentBoard(boardState);
 
 		VBox yourGridVBox = new VBox(10, yourGridTitle, yourGridPane);
 		yourGridVBox.setAlignment(Pos.CENTER);
@@ -396,11 +497,15 @@ public class GuiClient extends Application {
 	}
 
 
-	private GridPane createOpponentGridPane() {
+	private GridPane createOpponentGridPane(int[][] playerBoardState) {
 		GridPane gridPane = new GridPane();
 		gridPane.setPadding(new Insets(10));
 		gridPane.setHgap(2);
 		gridPane.setVgap(2);
+
+		// Generate random ship placements for the opponent
+		int[][] opponentBoardState = generateRandomOpponentBoard(playerBoardState);
+		printBoats(gridPane, boardState);
 
 		// Initialize opponent's ship placements
 		for (int row = 0; row < GRID_SIZE; row++) {
@@ -422,6 +527,64 @@ public class GuiClient extends Application {
 
 		return gridPane;
 	}
+
+	private int[][] generateRandomBoard() {
+		int[][] opponentBoardState = new int[GRID_SIZE][GRID_SIZE];
+		Random random = new Random();
+
+		// Define the ships
+		int[][] ships = {
+				{5, random.nextInt(GRID_SIZE - 4)},  // Carrier (5 holes)
+				{4, random.nextInt(GRID_SIZE - 3)},  // Battleship (4 holes)
+				{3, random.nextInt(GRID_SIZE - 2)},  // Cruiser (3 holes)
+				{3, random.nextInt(GRID_SIZE - 2)},  // Submarine (3 holes)
+				{2, random.nextInt(GRID_SIZE - 1)}   // Destroyer (2 holes)
+		};
+
+		// Place ships randomly
+		for (int[] ship : ships) {
+			int size = ship[0];
+			int startX = ship[1];
+			int startY = random.nextInt(GRID_SIZE);
+			boolean horizontal = random.nextBoolean();
+
+			boolean canPlaceShip;
+			do {
+				canPlaceShip = true;
+				for (int i = 0; i < size; i++) {
+					if (horizontal) {
+						if (startX + i >= GRID_SIZE || opponentBoardState[startY][startX + i] != 0) {
+							// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
+							canPlaceShip = false;
+							startX = random.nextInt(GRID_SIZE - size + 1);
+							startY = random.nextInt(GRID_SIZE);
+							break;
+						}
+					} else {
+						if (startY + i >= GRID_SIZE || opponentBoardState[startY + i][startX] != 0) {
+							// Ship cannot be placed because a cell is already occupied or it exceeds grid boundary
+							canPlaceShip = false;
+							startX = random.nextInt(GRID_SIZE);
+							startY = random.nextInt(GRID_SIZE - size + 1);
+							break;
+						}
+					}
+				}
+			} while (!canPlaceShip);
+
+			for (int i = 0; i < size; i++) {
+				if (horizontal) {
+					opponentBoardState[startY][startX + i] = 1;  // Place ship part
+				} else {
+					opponentBoardState[startY + i][startX] = 1;  // Place ship part
+				}
+			}
+		}
+
+		return opponentBoardState;
+	}
+
+
 
 
 	private void addOpponentGridClickHandlers(GridPane opponentGridPane) {
@@ -481,81 +644,6 @@ public class GuiClient extends Application {
 		alert.setContentText(message);
 		alert.showAndWait();
 	}
-
-
-//	private void addRandomShips(int[][] boardState) {
-//		// Your existing logic to randomly generate opponent's ship placements goes here
-//	}
-
-
-//	private void addOpponentGridClickHandlers(GridPane opponentGridPane) {
-//		for (int row = 0; row < GRID_SIZE; row++) {
-//			for (int col = 0; col < GRID_SIZE; col++) {
-//				Rectangle rectangle = gridRectangles[row][col];
-//				int finalRow = row;
-//				int finalCol = col;
-//				rectangle.setOnMouseClicked(event -> handleOpponentGridClick(finalRow, finalCol));
-//			}
-//		}
-//	}
-
-//	private void handleOpponentGridClick(int row, int col) {
-//		Random random = new Random();
-//		boolean isHit = random.nextBoolean();
-//
-//		Rectangle targetRectangle = gridRectangles[row][col];
-//		if (boardState[row][col] == 1) { // Check if there is a ship in the clicked position
-//			if (isHit) {
-//				targetRectangle.setFill(Color.RED); // If hit, change color to red
-//			} else {
-//				targetRectangle.setFill(Color.GRAY); // If miss, change color to gray
-//			}
-//		} else {
-//			targetRectangle.setFill(Color.GRAY); // If no ship, change color to gray (indicating a miss)
-//		}
-//	}
-//
-//	public void placeShipsForAI() {
-//		int[] shipSizes = {5, 4, 3, 2};  // Sizes of the ships to place
-//		Random random = new Random();
-//
-//		for (int size : shipSizes) {
-//			boolean placed = false;
-//			while (!placed) {
-//				int x = random.nextInt(GRID_SIZE);
-//				int y = random.nextInt(GRID_SIZE);
-//				boolean horizontal = random.nextBoolean();  // Randomly placing the ship horizontally or vertically
-//
-//				if (canPlaceShip(x, y, size, horizontal)) {
-//					for (int i = 0; i < size; i++) {
-//						if (horizontal) {
-//							opponentBoardState[x][y + i] = 1;  // Place ship part
-//						} else {
-//							opponentBoardState[x + i][y] = 1;  // Place ship part
-//						}
-//					}
-//					placed = true;
-//				}
-//			}
-//		}
-//	}
-//
-//	private boolean canPlaceShip(int x, int y, int size, boolean horizontal) {
-//		if (horizontal) {
-//			if (y + size > GRID_SIZE) return false;  // Check if ship goes out of bounds
-//			for (int i = 0; i < size; i++) {
-//				if (opponentBoardState[x][y + i] != 0) return false;  // Check if the spot is already taken
-//			}
-//		} else {
-//			if (x + size > GRID_SIZE) return false;  // Check if ship goes out of bounds
-//			for (int i = 0; i < size; i++) {
-//				if (opponentBoardState[x + i][y] != 0) return false;  // Check if the spot is already taken
-//			}
-//		}
-//		return true;
-//	}
-//
-//
 
 
 	private void sendBoardStateToServer() {
@@ -717,7 +805,7 @@ public class GuiClient extends Application {
 		printBoats(yourGridPane, boardState);
 //		addRandomShips();
 
-		GridPane opponentGridPane = createOpponentGridPane(); // Create opponent's grid pane
+		GridPane opponentGridPane = createOpponentGridPane(boardState);
 		this.opponentBoardState = opponentBoardState;
 		printBoats(opponentGridPane, opponentBoardState);
 //		addOpponentGridClickHandlers(opponentGridPane); // Add event handlers to opponent's grid
