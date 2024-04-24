@@ -448,7 +448,7 @@ public class GuiClient extends Application {
 		return hiddenOpponentBoard;
 	}
 
-	
+
 
 
 	private void printBoats(GridPane gridPane, int[][] boardState) {
@@ -837,7 +837,7 @@ public class GuiClient extends Application {
 //		gridPane.add(rectangle, col, row);
 //		yourGridPane.add();
 
-		this.boardState = boardState;//
+		this.boardState = boardState;
 		System.out.println("what is the board state before add print to screen" + Arrays.deepToString(boardState));
 		printBoats(yourGridPane, boardState);
 //		addRandomShips();
