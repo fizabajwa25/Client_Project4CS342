@@ -19,7 +19,7 @@ public class Message implements Serializable {
         GET_OPPONENT_BOARD,
         TRY_MOVE,
         HIT,
-        MISS
+        SET_BOARD_PLAYER_VS_PLAYER, GET_BOARD_PLAYER_VS_PLAYER, MISS
     }
 
     public Message(MessageType type) {
