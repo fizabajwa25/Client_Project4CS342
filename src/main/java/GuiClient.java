@@ -427,16 +427,16 @@ public class GuiClient extends Application {
 			}
 		}
 
-		// Create a hidden version of the opponent's board
-		int[][] hiddenOpponentBoard = new int[GRID_SIZE][GRID_SIZE];
-		for (int i = 0; i < GRID_SIZE; i++) {
-			for (int j = 0; j < GRID_SIZE; j++) {
-				// Hide ship placements by setting all cells to 0
-				hiddenOpponentBoard[i][j] = 0;
-			}
-		}
-
-		return hiddenOpponentBoard;
+//		// Create a hidden version of the opponent's board
+//		int[][] hiddenOpponentBoard = new int[GRID_SIZE][GRID_SIZE];
+//		for (int i = 0; i < GRID_SIZE; i++) {
+//			for (int j = 0; j < GRID_SIZE; j++) {
+//				// Hide ship placements by setting all cells to 0
+//				hiddenOpponentBoard[i][j] = 0;
+//			}
+//		}
+//
+		return opponentBoardState;
 	}
 
 
@@ -505,7 +505,7 @@ public class GuiClient extends Application {
 
 		// Generate random ship placements for the opponent
 		int[][] opponentBoardState = generateRandomOpponentBoard(playerBoardState);
-		printBoats(gridPane, boardState);
+	//	printBoats(gridPane, boardState);
 
 		// Initialize opponent's ship placements
 		for (int row = 0; row < GRID_SIZE; row++) {
