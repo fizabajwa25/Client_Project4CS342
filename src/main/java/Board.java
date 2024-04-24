@@ -1,3 +1,5 @@
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Screen;
 
 
 public class Board extends Parent {
@@ -43,7 +46,7 @@ public class Board extends Parent {
             int length = Integer.parseInt(ship.getType());
 
             // ship is vertical check y values
-            if (ship.vertical) {
+            if (ship.isVertical()) {
                 for (int i = y; i < y + length; i++) {
                     Cell cell = getCell(x, i);
                     cell.ship = ship;

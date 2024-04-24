@@ -1,29 +1,30 @@
 import javafx.scene.paint.Color;
 
 public class Ship {
-    private boolean vertical;
+    public boolean vertical; // might be better as private with a getter/setter
     private int size;
     private Color color;
     private String type;
-    private int hitsTaken;
+    private int hitCount; // to track the hits the ship has taken
 
-    // Full constructor
+    // Fully parameterized constructor
     public Ship(int size, Color color, String type) {
         this.size = size;
         this.color = color;
         this.type = type;
-        this.hitsTaken = 0;
+        this.vertical = false; // default orientation
+        this.hitCount = 0;
     }
 
-    // Constructor for position and color only, type defaulted to "Unknown"
+    // Constructor with default color and type, meant for quick setup
     public Ship(int size, Color color) {
-        this(size, color, "Unknown");
+        this(size, color, "Unknown"); // delegate to the main constructor
     }
 
-    // Constructors without functionality
-    public Ship(int startX, int startY, Color white) {
-        // Placeholder - typically startX and startY would be handled elsewhere
-        this(1, white, "Unknown"); // Default size to 1, which needs proper handling if used seriously
+    // Constructor for starting position (if needed for specific logic, which is not detailed here)
+    public Ship(int startX, int startY, Color color) {
+        this(1, color); // Assuming default size 1 for lack of better information
+        // startX and startY could be part of Ship's state if needed
     }
 
     // Getters and setters
@@ -51,28 +52,21 @@ public class Ship {
         this.type = type;
     }
 
-    public boolean isVertical() {
-        return vertical;
-    }
-
-    public void setVertical(boolean vertical) {
-        this.vertical = vertical;
-    }
-
-    // Method to check if the ship is still "alive" (not completely destroyed)
     public boolean isAlive() {
-        return hitsTaken < size;
+        return hitCount < size; // Ship is alive if it hasn't been hit enough times
     }
 
-    // Method to record a hit on the ship
     public void hit() {
-        if (hitsTaken < size) {
-            hitsTaken++;
+        if (hitCount < size) {
+            hitCount++; // Increment the hit count only if it hasn't reached the size of the ship
         }
     }
 
-    // Additional helper method to get remaining health of the ship
-    public int getRemainingHealth() {
-        return size - hitsTaken;
+    public boolean isVertical() {
+        return vertical; // Return the orientation of the ship
+    }
+
+    public void setVertical(boolean vertical) {
+        this.vertical = vertical; // Allow changing the orientation
     }
 }
