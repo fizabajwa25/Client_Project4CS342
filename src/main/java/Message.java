@@ -3,23 +3,26 @@ import java.io.Serializable;
 
 public class Message implements Serializable {
     private static final long serialVersionUID = 42L;
-    private static final int GRID_SIZE = 10; // Assuming a grid size of 10x10
-
     private int[][] boardState;
-    private int[][] opponentBoardState = new int[GRID_SIZE][GRID_SIZE];
-    private Rectangle[][] gridRectangles = new Rectangle[GRID_SIZE][GRID_SIZE]; // GUI rectangles for the grid
-
-
+    private int[][] oppBoardState;
     private MessageType type;
+    private int playerIndex;
+    private int row;
+    private int col;
+
+
 
     public enum MessageType {
         SET_BOARD,
         GET_BOARD,
         SET_OPPONENT_BOARD,
         GET_OPPONENT_BOARD,
+        SET_BOARD_PLAYER_VS_PLAYER,
+        GET_BOARD_PLAYER_VS_PLAYER,
         TRY_MOVE,
         HIT,
-        MISS
+        SHOT_FIRED,
+        TURN, MISS
     }
 
     public Message(MessageType type) {
@@ -45,5 +48,35 @@ public class Message implements Serializable {
 
     public void setBoardState(int[][] boardState) {
         this.boardState = boardState;
+    }
+    public int[][] getOppBoardState(){
+        return oppBoardState;
+    }
+    public void setOppBoardState(int[][] oppBoardState){
+        this.oppBoardState = oppBoardState;
+    }
+
+    public int getPlayerIndex() {
+        return playerIndex;
+    }
+
+    public void setPlayerIndex(int playerIndex) {
+        this.playerIndex = playerIndex;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public void setRow(int row) {
+        this.row = row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public void setCol(int col) {
+        this.col = col;
     }
 }
