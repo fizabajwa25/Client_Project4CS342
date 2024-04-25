@@ -2,9 +2,21 @@ import java.io.*;
 import java.net.*;
 import java.util.Arrays;
 import java.util.function.Consumer;
+/*-------------------------------------------
+Program 4: BattleShip
+Course: CS 342, Spring 2024, UIC
+System: IntelliJ
+Author: Aleena Mehmood, Fiza Bajwa, Ashika Shekar
+------------------------------------------- */
 
+/*-------------------------------------------
+NOTE FROM AUTHORS:
+player vs player (or "Play with human") only works when at least 2 clients are running.
+If you try to hit "start" without an  opponent already connected on server, the code does not work.
+Please ensure at least 2 clients are running before you hit "start" in the set ships page.
+Thank you.
+------------------------------------------- */
 public class Client extends Thread{
-
 
 	Socket socketClient;
 
@@ -31,8 +43,6 @@ public class Client extends Thread{
 		while(true) {
 
 			try {
-//				String message = in.readObject().toString();
-//				callback.accept(message);
 				Message data = (Message) in.readObject();
 				callback.accept(data);
 				System.out.println("message sent from server:" + data.getType());
@@ -43,7 +53,6 @@ public class Client extends Thread{
 	}
 
 	public void send(Message data) {
-
 		try {
 			out.writeObject(data);
 			System.out.println("sent to server: "+ Arrays.deepToString(data.getBoardState()));
@@ -53,6 +62,4 @@ public class Client extends Thread{
 			e.printStackTrace();
 		}
 	}
-
-
 }
