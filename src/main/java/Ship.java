@@ -27,6 +27,8 @@ public class Ship {
         // startX and startY could be part of Ship's state if needed
     }
 
+
+
     // Getters and setters
     public int getSize() {
         return size;

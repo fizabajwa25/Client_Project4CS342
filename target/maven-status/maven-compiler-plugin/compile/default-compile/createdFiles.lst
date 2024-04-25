@@ -1,5 +1,8 @@
+Board$Cell.class
 Message$MessageType.class
 Client.class
+Board.class
 Message.class
 Ship.class
 GuiClient.class
+GuiClient$1.class
