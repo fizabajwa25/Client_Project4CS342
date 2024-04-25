@@ -9,6 +9,8 @@ public class Message implements Serializable {
     private int playerIndex;
     private int row;
     private int col;
+    boolean playersTurn;
+    boolean oppsTurn;
 
 
 
@@ -34,6 +36,22 @@ public class Message implements Serializable {
         this.type = type;
         this.boardState = boardState;
     }
+
+    public Message(MessageType type, int row, int col, boolean playersTurn, boolean oppsTurn) {
+        this.type = type;
+        this.row = row;
+        this.col = col;
+        this.playersTurn = playersTurn;
+        this.oppsTurn = oppsTurn;
+    }
+
+    public Message(MessageType type, boolean playersTurn, boolean oppsTurn) {
+        this.type = type;
+        this.playersTurn = playersTurn;
+        this.oppsTurn = oppsTurn;
+    }
+
+
 
     public MessageType getType() {
         return type;
@@ -79,5 +97,21 @@ public class Message implements Serializable {
 
     public void setCol(int col) {
         this.col = col;
+    }
+
+    public boolean isPlayersTurn() {
+        return playersTurn;
+    }
+
+    public boolean isOppsTurn() {
+        return oppsTurn;
+    }
+
+    public void setOppsTurn(boolean oppsTurn) {
+        this.oppsTurn = oppsTurn;
+    }
+
+    public void setPlayersTurn(boolean playersTurn) {
+        this.playersTurn = playersTurn;
     }
 }
