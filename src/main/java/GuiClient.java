@@ -489,6 +489,22 @@ public class GuiClient extends Application {
 		}
 	}
 
+	private void printOppBoats(GridPane gridPane, int[][] boardState) {
+		clearGridPane(gridPane);
+		for (int row = 0; row < GRID_SIZE; row++) {
+			Color color = shipColors.get(row);
+			for (int col = 0; col < GRID_SIZE; col++) {
+				Rectangle rectangle = gridRectangles[row][col];
+				if (boardState[row][col] == 1) {
+					rectangle.setFill(Color.LIGHTBLUE);
+				} else {
+					// Otherwise, set the rectangle color to indicate an empty cell
+					rectangle.setFill(Color.LIGHTBLUE);
+				}
+			}
+		}
+	}
+
 	private Scene createGamePage(Stage primaryStage, int[][] boardState, int[][] opponentBoardState) {
 		System.out.println("when do i reach create game page?");
 		BorderPane borderPane = new BorderPane();
@@ -874,7 +890,7 @@ public class GuiClient extends Application {
 		printBoats(yourGridPane, boardState);
 //		addRandomShips();
 
-		GridPane opponentGridPane = createOpponentGridPane(); // Create opponent's grid pane
+		GridPane opponentGridPane = createOpponentGridPane();
 		this.opponentBoardState = opponentBoardState;
 		System.out.println("opponent board: "+ Arrays.deepToString(opponentBoardState));
 //		int count = 0;
@@ -889,7 +905,7 @@ public class GuiClient extends Application {
 //			displayAlert("Waiting for another opponent...");
 //		}
 
-		printBoats(opponentGridPane, opponentBoardState);
+		printOppBoats(opponentGridPane, opponentBoardState);
 //		addOpponentGridClickHandlers(opponentGridPane); // Add event handlers to opponent's grid
 
 		VBox yourGridVBox = new VBox(10, yourGridTitle, yourGridPane);
