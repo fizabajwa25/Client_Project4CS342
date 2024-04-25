@@ -1,6 +1,7 @@
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Alert.AlertType;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -44,6 +45,9 @@ public class GuiClient extends Application {
 	private boolean[][] missesGrid = new boolean[GRID_SIZE][GRID_SIZE];
 
 	ArrayList<Color> shipColors = new ArrayList<>();
+	private boolean isPlayer1Turn = true;
+	Button sendMoveButton = createButtonInGame("Send Move", "#76b6c4");
+
 
 
 
@@ -75,6 +79,7 @@ public class GuiClient extends Application {
 				if (message.getType() == Message.MessageType.GET_BOARD) { //player vs ai
 					boardState = message.getBoardState();
 					System.out.println("server sent client board: " + Arrays.deepToString(boardState));
+					primaryStage.setScene(createGamePage(primaryStage,boardState,opponentBoardState));
 				} else if (message.getType() == Message.MessageType.GET_OPPONENT_BOARD) { // pvp
 					opponentBoardState = message.getBoardState();
 					System.out.println("opponent board lenngth: "+opponentBoardState.length);
@@ -565,6 +570,14 @@ public class GuiClient extends Application {
 		gridPane.setHgap(2);
 		gridPane.setVgap(2);
 
+//		if (!isPlayer1Turn) {
+//			// Disable grid clicks if it's not Player 1's turn
+//			for (Node node : gridPane.getChildren()) {
+//				node.setDisable(true);
+//				displayAlert("Waiting for opponent");
+//			}
+//		}
+
 		// Initialize opponent's ship placements
 		for (int row = 0; row < GRID_SIZE; row++) {
 			for (int col = 0; col < GRID_SIZE; col++) {
@@ -609,37 +622,41 @@ public class GuiClient extends Application {
 	}
 
 	private void handleOpponentGridClick(int row, int col) {
-		// Check if the spot has already been hit
-		if (alreadyHit(row, col)) {
-			displayAlert("Already hit spot!");
-			return;
-		}
+//		if (isPlayer1Turn) {
+			// Check if the spot has already been hit
+			if (alreadyHit(row, col)) {
+				displayAlert("Already hit spot!");
+				return;
+			}
 
-		// Check if it's a hit or a miss
-		boolean isHit = opponentBoardState[row][col] == 1;
+			// Check if it's a hit or a miss
+			boolean isHit = opponentBoardState[row][col] == 1;
 
-		// Mark the spot as hit or miss
-		Rectangle targetRectangle = gridRectangles[row][col];
-		targetRectangle.setFill(isHit ? Color.RED : Color.GRAY);
+			// Mark the spot as hit or miss
+			Rectangle targetRectangle = gridRectangles[row][col];
+			targetRectangle.setFill(isHit ? Color.RED : Color.GRAY);
 
-		// Process the player's move
-		if (opponentBoardState[row][col] == 1) {
-			// Hit a ship
-			gridRectangles[row][col].setFill(Color.RED);
-			opponentBoardState[row][col] = 1; // Mark as hit
-			// Add logic to keep track of ships if needed
-		} else {
-			// Missed
-			gridRectangles[row][col].setFill(Color.GRAY);
-			opponentBoardState[row][col] = -1; // Mark as missed
-		}
+			// Process the player's move
+			if (opponentBoardState[row][col] == 1) {
+				// Hit a ship
+				gridRectangles[row][col].setFill(Color.RED);
+				opponentBoardState[row][col] = 1; // Mark as hit
+				// Add logic to keep track of ships if needed
+			} else {
+				// Missed
+				gridRectangles[row][col].setFill(Color.GRAY);
+				opponentBoardState[row][col] = -1; // Mark as missed
+			}
 
-		// Add the clicked coordinates to the corresponding list
-		if (isHit) {
-			hitsGrid[row][col] = true;
-		} else {
-			missesGrid[row][col] = true;
-		}
+			// Add the clicked coordinates to the corresponding list
+			if (isHit) {
+				hitsGrid[row][col] = true;
+			} else {
+				missesGrid[row][col] = true;
+			}
+//			switchTurns();
+//		clientConnection.send(new Message(Message.MessageType.PLAYER_TURN));
+//		}
 	}
 
 	private boolean alreadyHit(int row, int col) {
@@ -919,14 +936,39 @@ public class GuiClient extends Application {
 
 		Button backButton = createButtonInGame("Back", "#76b6c4");
 		backButton.setOnAction(e -> primaryStage.setScene(sceneMap.get("Welcome")));
+//		Button sendMoveButton = createButtonInGame("Send Move", "#76b6c4");
+		sendMoveButton.setOnAction(event -> handleSendMove());
 
-		borderPane.setBottom(backButton);
-		BorderPane.setAlignment(backButton, Pos.CENTER);
+		HBox buttonBox = new HBox(backButton,sendMoveButton);
+		borderPane.setTop(buttonBox);
+		BorderPane.setAlignment(buttonBox, Pos.CENTER);
 
 		borderPane.setStyle("-fx-background-color: linear-gradient(to bottom, #003366, #000033);");
 
 		Scene scene = new Scene(borderPane, 800, 400);
 		return scene;
 	}
+	private void handleSendMove() {
+		// Disable the button to prevent multiple clicks
+		sendMoveButton.setDisable(true);
+//
+//		// Code to get the selected coordinate
+//		int row = ...; // Get the selected row
+//		int col = ...; // Get the selected column
+
+		// Send the player's move to the server
+		clientConnection.send(new Message(Message.MessageType.PLAYER_TURN));
+
+		// Wait for the server response (OPPONENT_MOVE)
+		// Handle the server response in the client's message handler
+
+		// After receiving the server response, re-enable the button
+		// This can be done in the message handler when receiving the OPPONENT_MOVE message
+	}
+
+	private void switchTurns() {
+		isPlayer1Turn = !isPlayer1Turn;
+	}
+
 
 }

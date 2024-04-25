@@ -19,6 +19,7 @@ public class Message implements Serializable {
         GET_OPPONENT_BOARD,
         SET_BOARD_PLAYER_VS_PLAYER,
         GET_BOARD_PLAYER_VS_PLAYER,
+        PLAYER_TURN,
         TRY_MOVE,
         HIT,
         SHOT_FIRED,
