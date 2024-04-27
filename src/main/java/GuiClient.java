@@ -50,12 +50,7 @@ public class GuiClient extends Application {
 
 	ArrayList<Color> shipColors = new ArrayList<>();
 	private boolean isPlayer1Turn = true;
-	Button sendMoveButton = createButtonInGame("Send Move", "#76b6c4");
 	private Rectangle selectedSquare;
-//	private boolean isPlayer1TurnHuman= true;
-//	private boolean playersTurn = true;
-//	private boolean isYouTurn = true;
-//	private boolean oppsTurn = false;
 	private boolean isPlayersTurn = true;
 	private int myScore = 0;
 
@@ -70,22 +65,16 @@ public class GuiClient extends Application {
 			Platform.runLater(() -> {
 				listItems2.getItems().add(data.toString());
 				message = (Message) data;
-				System.out.println("server sent: " + message.getType());
 				if (message.getType() == Message.MessageType.GET_BOARD) { //player vs ai
 					boardState = message.getBoardState();
-					System.out.println("server sent client board: " + Arrays.deepToString(boardState));
 					primaryStage.setScene(createGamePage(primaryStage,boardState,opponentBoardState));
 				} else if (message.getType() == Message.MessageType.GET_OPPONENT_BOARD) { // pvp
 					opponentBoardState = message.getBoardState();
-					System.out.println("opponent board lenngth: "+opponentBoardState.length);
-					System.out.println("server sent opponent board: " + Arrays.deepToString(opponentBoardState));
 				} else if (message.getType() == Message.MessageType.GET_BOARD_PLAYER_VS_PLAYER){
 					boardState = message.getBoardState();
-					System.out.println("server sent client board: " + Arrays.deepToString(boardState));
 					primaryStage.setScene(createGamePageHuman(primaryStage, boardState, opponentBoardState));
 				} else if (message.getType() == Message.MessageType.MISS || message.getType() == Message.MessageType.HIT){
 					handleShotResult(message.getType());
-					System.out.println("my score: "+myScore);
 					if (myScore == 17){
 						displayAlert("You won!");
 						primaryStage.setScene(sceneMap.get("Welcome"));
@@ -188,7 +177,6 @@ public class GuiClient extends Application {
 	}
 
 	private Scene SetBoatsPage(Stage primaryStage) {
-		System.out.println("when do i reach set boats page?");
 		BorderPane borderPane = new BorderPane();
 		borderPane.setPadding(new Insets(20));
 
@@ -422,7 +410,6 @@ public class GuiClient extends Application {
 
 	private Scene createGamePage(Stage primaryStage, int[][] boardState, int[][] opponentBoardState) {
 		initializeScoreboard();
-		System.out.println("when do i reach create game page?");
 		BorderPane borderPane = new BorderPane();
 		borderPane.setPadding(new Insets(20));
 
@@ -437,7 +424,6 @@ public class GuiClient extends Application {
 		GridPane yourGridPane = createGridPane();
 
 		this.boardState = boardState;//
-		System.out.println("what is the board state before add print to screen" + Arrays.deepToString(boardState));
 		printBoats(yourGridPane, boardState);
 
 		this.boardState = boardState;
@@ -775,7 +761,6 @@ public class GuiClient extends Application {
 	}
 
 	private Scene createGamePageHuman(Stage primaryStage, int[][] boardState, int[][] opponentBoardState) {
-		System.out.println("when do i reach create game page human?");
 		BorderPane borderPane = new BorderPane();
 		borderPane.setPadding(new Insets(20));
 
@@ -790,12 +775,10 @@ public class GuiClient extends Application {
 		GridPane yourGridPane = createGridPane();
 
 		this.boardState = boardState;
-		System.out.println("what is the board state before add print to screen" + Arrays.deepToString(boardState));
 		printBoats(yourGridPane, boardState);
 
 		GridPane opponentGridPane = createOpponentGridPaneHuman();
 		this.opponentBoardState = opponentBoardState;
-		System.out.println("opponent board: "+ Arrays.deepToString(opponentBoardState));
 
 		printOppBoats(opponentGridPane, opponentBoardState);
 
