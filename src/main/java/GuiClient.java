@@ -831,12 +831,12 @@ public class GuiClient extends Application {
 		return hitsGrid[row][col] != 0;
 	}
 	private void handleShotResult(Message.MessageType messageType) {
-		if (messageType == Message.MessageType.HIT) {
+		if (messageType == Message.MessageType.HIT && isPlayersTurn) {
 			selectedSquare.setFill(Color.RED);
 			if (isPlayersTurn){
 				myScore++;
 			}
-		} else if (messageType == Message.MessageType.MISS) {
+		} else if (messageType == Message.MessageType.MISS && isPlayersTurn) {
 			selectedSquare.setFill(Color.GREY);
 		}
 	}
