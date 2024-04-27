@@ -55,7 +55,6 @@ public class Client extends Thread{
 	public void send(Message data) {
 		try {
 			out.writeObject(data);
-			System.out.println("sent to server: "+ Arrays.deepToString(data.getBoardState()));
 			System.out.println("sent coord to sever: row: " + data.getRow() +" col: "+data.getCol());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
